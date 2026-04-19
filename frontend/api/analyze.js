@@ -143,12 +143,16 @@ function detectSelfdestruct(source) {
 
 function detectVisibility(source) {
   const results = [];
-  const re = /function\s+(\w+)\s*\([^)]*\)\s*(?!(public|private|internal|external|view|pure|payable|\s*\{|\s*returns|\s*virtual|\s*override))/g;
+  // Capture everything between ) and { to check for visibility keywords
+  const re = /function\s+(\w+)\s*\([^)]*\)([^{;]*)\{/g;
   let m;
   const seen = new Set();
   while ((m = re.exec(source)) !== null) {
     const name = m[1];
     if (['constructor', 'fallback', 'receive'].includes(name) || seen.has(name)) continue;
+    const between = m[2] || '';
+    // Skip if any visibility keyword is present between ) and {
+    if (/\b(public|private|internal|external)\b/.test(between)) continue;
     seen.add(name);
     const line = lineOf(source, m.index);
     results.push({
