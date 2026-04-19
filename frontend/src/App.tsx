@@ -87,12 +87,60 @@ contract SelfdestructVuln {
     }
 }`;
 
+const SAFE_EXAMPLE = `// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.19;
+
+/// @title SafeVault — Secure ETH deposit/withdraw pattern
+contract SafeVault {
+    address public immutable owner;
+    mapping(address => uint256) private balances;
+    uint256 public totalDeposits;
+
+    event Deposit(address indexed user, uint256 amount);
+    event Withdrawal(address indexed user, uint256 amount);
+
+    error NotOwner();
+    error InsufficientBalance();
+    error ZeroAmount();
+
+    modifier onlyOwner() {
+        if (msg.sender != owner) revert NotOwner();
+        _;
+    }
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    function deposit() external payable {
+        if (msg.value == 0) revert ZeroAmount();
+        balances[msg.sender] += msg.value;
+        totalDeposits += msg.value;
+        emit Deposit(msg.sender, msg.value);
+    }
+
+    function withdraw(uint256 amount) external {
+        if (balances[msg.sender] < amount) revert InsufficientBalance();
+        if (amount == 0) revert ZeroAmount();
+        // Checks-Effects-Interactions: state update BEFORE external call
+        balances[msg.sender] -= amount;
+        totalDeposits -= amount;
+        payable(msg.sender).transfer(amount);
+        emit Withdrawal(msg.sender, amount);
+    }
+
+    function balanceOf(address user) external view returns (uint256) {
+        return balances[user];
+    }
+}`;
+
 const EXAMPLES: { label: string; code: string }[] = [
-  { label: 'ReentrancyVuln.sol', code: REENTRANCY_EXAMPLE },
-  { label: 'TxOriginVuln.sol', code: TX_ORIGIN_EXAMPLE },
-  { label: 'OverflowVuln.sol', code: OVERFLOW_EXAMPLE },
+  { label: 'ReentrancyVuln.sol',    code: REENTRANCY_EXAMPLE },
+  { label: 'TxOriginVuln.sol',      code: TX_ORIGIN_EXAMPLE },
+  { label: 'OverflowVuln.sol',      code: OVERFLOW_EXAMPLE },
   { label: 'UncheckedCallVuln.sol', code: UNCHECKED_CALL_EXAMPLE },
-  { label: 'SelfdestructVuln.sol', code: SELFDESTRUCT_EXAMPLE },
+  { label: 'SelfdestructVuln.sol',  code: SELFDESTRUCT_EXAMPLE },
+  { label: '✅ SafeVault.sol',       code: SAFE_EXAMPLE },
 ];
 
 // ── App ───────────────────────────────────────────────────────────────────────
@@ -148,18 +196,19 @@ export default function App() {
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-6">
         {/* Toolbar row */}
         <div className="flex flex-col sm:flex-row gap-3 mb-5 animate-fade-in">
-          <div className="flex items-center gap-2 flex-1">
-            <svg className="w-4 h-4 text-gray-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <div className="flex items-center gap-2 flex-1 bg-gray-900/60 border border-gray-700/60 rounded-xl px-3 py-1 backdrop-blur-sm">
+            <svg className="w-3.5 h-3.5 text-gray-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path strokeLinecap="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
+            <span className="text-xs text-gray-600 shrink-0">Example</span>
+            <div className="w-px h-4 bg-gray-700/60 shrink-0" />
             <select
               onChange={handleExampleSelect}
-              className="flex-1 bg-gray-800/80 border border-gray-700/60 text-gray-300 text-sm rounded-xl px-3 py-2.5
-                focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50
-                cursor-pointer backdrop-blur-sm transition-colors hover:border-gray-600"
+              className="flex-1 bg-transparent text-gray-300 text-sm py-2
+                focus:outline-none cursor-pointer transition-colors hover:text-gray-100"
             >
               {EXAMPLES.map((ex) => (
-                <option key={ex.label} value={ex.label}>{ex.label}</option>
+                <option key={ex.label} value={ex.label} className="bg-gray-900">{ex.label}</option>
               ))}
             </select>
           </div>
@@ -174,19 +223,25 @@ export default function App() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Editor column */}
           <div className="flex flex-col gap-3">
-            <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-widest flex items-center gap-2">
-              <span className="w-1 h-3 bg-indigo-500 rounded-full inline-block" />
-              Contract Source
-            </h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-widest flex items-center gap-2">
+                <span className="w-1.5 h-3 bg-indigo-500 rounded-full inline-block" />
+                Contract Source
+              </h2>
+              <span className="text-xs text-gray-700">Solidity · Monaco Editor</span>
+            </div>
             <CodeEditor value={code} onChange={setCode} />
           </div>
 
           {/* Results column */}
           <div className="flex flex-col gap-3">
-            <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-widest flex items-center gap-2">
-              <span className="w-1 h-3 bg-cyan-500 rounded-full inline-block" />
-              Analysis Results
-            </h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-widest flex items-center gap-2">
+                <span className="w-1.5 h-3 bg-cyan-500 rounded-full inline-block" />
+                Analysis Results
+              </h2>
+              <span className="text-xs text-gray-700">6 rules · SWC Registry</span>
+            </div>
             <ResultsPanel isLoading={isLoading} result={result} error={error} />
           </div>
         </div>

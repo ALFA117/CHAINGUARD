@@ -7,7 +7,9 @@ body {
   @apply bg-gray-950 text-gray-100 antialiased;
   background-image:
     radial-gradient(ellipse at 20% 0%, rgba(99,102,241,0.08) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 100%, rgba(6,182,212,0.06) 0%, transparent 50%);
+    radial-gradient(ellipse at 80% 100%, rgba(6,182,212,0.06) 0%, transparent 50%),
+    radial-gradient(circle, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 28px 28px;
   min-height: 100vh;
 }
 
@@ -62,6 +64,22 @@ body {
   to   { transform: rotate(360deg); }
 }
 
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-9px); }
+}
+
+@keyframes orbitSpin {
+  from { transform: rotate(0deg) scale(1.45); }
+  to   { transform: rotate(360deg) scale(1.45); }
+}
+
+@keyframes popIn {
+  0%   { opacity: 0; transform: scale(0.7); }
+  70%  { transform: scale(1.08); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
 /* ── Utility classes ───────────────────────────────────────────────────────── */
 .animate-fade-in-up {
   animation: fadeInUp 0.45s ease both;
@@ -86,6 +104,14 @@ body {
 
 .animate-count-up {
   animation: countUp 0.6s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+
+.animate-float {
+  animation: float 3.5s ease-in-out infinite;
+}
+
+.animate-pop-in {
+  animation: popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
 }
 
 /* Staggered delay helpers */
