@@ -119,10 +119,13 @@ export default function App() {
       setSessionVulns((v) => v + res.totalFound);
       setSessionContracts((c) => c + 1);
     } catch (err: any) {
-      const msg =
+      const raw =
         err?.response?.data?.error ??
-        err?.message ??
-        'Failed to reach the analysis server. Is the backend running?';
+        err?.response?.data?.message ??
+        err?.message;
+      const msg = typeof raw === 'string' && raw.trim()
+        ? raw
+        : 'Failed to reach the analysis server. Is the backend running?';
       setError(msg);
     } finally {
       setIsLoading(false);
