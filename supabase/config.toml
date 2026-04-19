@@ -1,0 +1,11 @@
+project_id = "chainguard"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[functions.analyze]
+verify_jwt = false
