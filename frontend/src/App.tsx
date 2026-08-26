@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { analyzeContract } from './api/analyze';
 import { AnalysisResult } from './types';
 import Header from './components/Header';
+import LandingHero from './components/LandingHero';
+import WhyChainGuard from './components/WhyChainGuard';
 import CodeEditor, { REENTRANCY_EXAMPLE } from './components/CodeEditor';
 import AnalyzeButton from './components/AnalyzeButton';
 import ResultsPanel from './components/ResultsPanel';
@@ -193,7 +195,13 @@ export default function App() {
     <div className="min-h-screen flex flex-col">
       <Header totalVulns={sessionVulns} totalContracts={sessionContracts} />
 
-      <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-6">
+      <LandingHero />
+      <WhyChainGuard />
+
+      <main id="scanner" className="flex-1 max-w-7xl mx-auto w-full px-4 py-10 scroll-mt-4">
+        <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-4">
+          Try it now
+        </h2>
         {/* Toolbar row */}
         <div className="flex flex-col sm:flex-row gap-3 mb-5 animate-fade-in">
           <div className="flex items-center gap-2 flex-1 bg-gray-900/60 border border-gray-700/60 rounded-xl px-3 py-1 backdrop-blur-sm">
