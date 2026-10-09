@@ -154,8 +154,8 @@
   inset: 0;
   will-change: transform;
 }
-.amb-calm .amb-near {
-  opacity: 0.4;
+.amb-calm .amb-3d > * {
+  opacity: calc(0.12 + 0.28 * var(--amb-strength)) !important;
 }
 .amb-far {
   inset: -10%;
@@ -242,11 +242,12 @@
   border-bottom: 0;
   border-radius: 999px 999px 0 0;
 }
-.amb-obj .amb-3d {
+/* Opacity lives on the faces: on the preserve-3d parent it would flatten the scene. */
+.amb-obj .amb-3d > * {
   opacity: calc(0.25 + 0.55 * var(--amb-strength));
 }
 @media (max-width: 767px) {
-  .amb-obj .amb-3d {
+  .amb-obj .amb-3d > * {
     opacity: calc(0.18 + 0.4 * var(--amb-strength));
   }
 }
