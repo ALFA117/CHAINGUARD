@@ -130,3 +130,32 @@ supabase functions deploy analyze --project-ref igtgbxghiqfqvlcqnula
 ## License
 
 MIT — Built with ❤️ by [@ALFA_EDG_](https://www.instagram.com/alfa_edg_/) for HackOWASP 8.0
+
+---
+
+## FIX_NOTES — design pass, 2026-10-09
+
+- **A High finding read as "Secure".** One High costs 20 points, so the reentrancy example scored 80 and the badge said *Secure*. The label and ring colour now follow the worst severity first (`SecurityScore`), and the PDF does the same.
+- **Hero stat that the tool cannot catch.** "$625M Ronin Bridge, key compromise" sat under a pitch about contract bugs; a stolen key is not something static rules find. Replaced by the two incidents that map to rules ChainGuard runs: The DAO (SWC-107) and the Parity multisig freeze (SWC-106).
+- **The hero preview stayed a skeleton forever** when the analyzer was unreachable. It now says so and offers *Retry*; it still never shows an invented result.
+- **The scan error had no way forward.** It now explains the likely cause and has *Try again*; the code stays in the editor.
+- **Text at 9–10px and controls under 44px** (score "/ 100", severity chips, step numbers, Copy, GitHub, Instagram, the example picker). Floor is 12px and 44px now. The example picker also gained a visible label.
+- **jsPDF in the main bundle.** It is now loaded only when someone exports: the first-load script went from 772 KB to 410 KB.
+- **SEO.** Description, canonical, Open Graph and X cards with an image, manifest, robots, sitemap, apple-touch icon. The favicon is the new shield.
+
+## DESIGN_NOTES
+
+- **Concept.** Dark is a *vault* (cool ink, scanner-green accent); light is an *audit report* on warm paper (forest green). The indigo-on-grey palette and the dotted grid were dropped. Severity has its own four tokens (crit / warn / low / info), each measured to 4.5:1 in both themes, and every chip also names the level so colour is never the only signal.
+- **Type.** Bricolage Grotesque for display, IBM Plex Sans for body, IBM Plex Mono for code, SWC ids and amounts — the same family the editor uses.
+- **Background — recipe 5 of the dice** (a first roll gave the warp tunnel, already used on another project this week, so the dice were rolled once more). Shields and padlocks float in real CSS 3D at different depths; shields turn to show their back face, padlocks bob. Pointer and scroll parallax per depth. It goes quiet (fewer objects, lower opacity) while the scanner is on screen, uses half the objects on phones, holds still under reduced motion and dims on the light theme. `src/components/AmbientBackground.tsx`.
+- **Hero visual.** `withdraw()` of the example contract, verbatim, with a scan beam sweeping it; when the real analyzer answers, the line it flagged lights up and the score and finding appear below.
+- **Motion** (`motion` 14): staggered hero entrance, springs on every press, crossfade between empty / scanning / result / error, findings that expand in place.
+
+## Two-minute phone check
+
+1. Open https://chainguard-pi.vercel.app — shields and locks drift behind the headline; nothing scrolls sideways.
+2. The code card in the hero shows a red-marked line and "1 finding" after a moment.
+3. Tap **Scan a contract**, then **Scan contract**: skeleton, then the score, a *High* chip and the finding open with its fix.
+4. Pick *SafeVault.sol (clean)* and scan: the green "no findings" card says it is not a full audit.
+5. Toggle the sun/moon: the paper theme reads cleanly, the editor switches too.
+6. Tap **Export PDF**: the report downloads.
