@@ -1,5 +1,9 @@
 import { useState, useCallback } from 'react';
 import Editor from '@monaco-editor/react';
+import { motion } from 'motion/react';
+import { Check, Copy, FileCode2 } from 'lucide-react';
+import { useDocTheme } from '../lib/theme';
+import { springSnappy } from '../lib/motion';
 
 const REENTRANCY_EXAMPLE = `// SPDX-License-Identifier: MIT
 pragma solidity ^0.7.6;
@@ -26,89 +30,56 @@ contract ReentrancyVuln {
 interface CodeEditorProps {
   value: string;
   onChange: (value: string) => void;
+  fileName: string;
 }
 
-export default function CodeEditor({ value, onChange }: CodeEditorProps) {
+export default function CodeEditor({ value, onChange, fileName }: CodeEditorProps) {
   const [copied, setCopied] = useState(false);
-  const lineCount = (value || REENTRANCY_EXAMPLE).split('\n').length;
+  const theme = useDocTheme();
+  const lineCount = (value || '').split('\n').length;
 
   const handleCopy = useCallback(() => {
-    navigator.clipboard.writeText(value || REENTRANCY_EXAMPLE).then(() => {
+    navigator.clipboard.writeText(value).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
     });
   }, [value]);
 
   return (
-    <div className="flex flex-col rounded-xl overflow-hidden border border-gray-700/60 shadow-xl shadow-black/30">
-      {/* Mac-style toolbar */}
-      <div className="flex items-center gap-3 px-4 py-2.5 bg-gray-900/90 border-b border-gray-700/60">
-        {/* Traffic light dots */}
-        <div className="flex items-center gap-1.5 shrink-0">
-          <span className="w-3 h-3 rounded-full bg-red-500/60 hover:bg-red-500 transition-colors cursor-default" />
-          <span className="w-3 h-3 rounded-full bg-yellow-500/60 hover:bg-yellow-500 transition-colors cursor-default" />
-          <span className="w-3 h-3 rounded-full bg-green-500/60 hover:bg-green-500 transition-colors cursor-default" />
-        </div>
-
-        {/* File name */}
-        <div className="flex items-center gap-1.5 flex-1 justify-center">
-          <svg className="w-3.5 h-3.5 text-indigo-400/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-            <polyline points="14 2 14 8 20 8" />
-          </svg>
-          <span className="text-xs text-gray-400 font-mono">contract.sol</span>
-        </div>
-
-        {/* Right side controls */}
-        <div className="flex items-center gap-2 shrink-0">
-          <span className="hidden sm:block text-xs text-gray-600 tabular-nums">{lineCount}L</span>
-          <span className="text-xs px-2 py-0.5 rounded bg-indigo-900/50 text-indigo-300 border border-indigo-700/30 font-mono">
-            Solidity
-          </span>
-          <button
-            onClick={handleCopy}
-            title="Copy source code"
-            className="flex items-center gap-1 text-xs px-2 py-0.5 rounded
-              bg-gray-800/80 hover:bg-gray-700/80 border border-gray-700/50 hover:border-gray-600/60
-              text-gray-500 hover:text-gray-200 transition-all duration-200 select-none"
-          >
-            {copied ? (
-              <>
-                <svg className="w-3 h-3 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-                <span className="text-emerald-400">Copied</span>
-              </>
-            ) : (
-              <>
-                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="9" y="9" width="13" height="13" rx="2" />
-                  <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-                </svg>
-                Copy
-              </>
-            )}
-          </button>
-        </div>
+    <div className="card cg-editor flex flex-col overflow-hidden">
+      <div className="flex items-center gap-3 border-b border-line/70 px-4 py-2">
+        <FileCode2 className="h-4 w-4 shrink-0 text-accent" aria-hidden />
+        <span className="min-w-0 flex-1 truncate font-mono text-sm">{fileName}</span>
+        <span className="hidden font-mono text-xs tabular-nums text-muted sm:block">{lineCount} lines</span>
+        <motion.button
+          type="button"
+          onClick={handleCopy}
+          className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg px-3 font-mono text-xs text-muted transition-colors hover:text-ink"
+          whileTap={{ scale: 0.95 }}
+          transition={springSnappy}
+          aria-label="Copy the contract source"
+        >
+          {copied ? <><Check className="h-3.5 w-3.5 text-accent" aria-hidden /> <span className="text-accent">Copied</span></> : <><Copy className="h-3.5 w-3.5" aria-hidden /> Copy</>}
+        </motion.button>
       </div>
-
-      {/* Monaco editor */}
-      <div className="flex-1 overflow-hidden bg-gray-950">
+      <div className="bg-surface">
         <Editor
-          height="420px"
+          height="440px"
           defaultLanguage="sol"
-          theme="vs-dark"
-          value={value || REENTRANCY_EXAMPLE}
+          theme={theme === 'light' ? 'vs' : 'vs-dark'}
+          value={value}
           onChange={(v) => onChange(v ?? '')}
+          loading={<div className="flex h-[440px] items-center justify-center font-mono text-sm text-muted">Loading editor…</div>}
           options={{
-            fontSize: 13,
+            fontSize: 14,
             minimap: { enabled: false },
             scrollBeyondLastLine: false,
             wordWrap: 'on',
             lineNumbers: 'on',
             padding: { top: 12, bottom: 12 },
-            fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+            fontFamily: "'IBM Plex Mono', monospace",
             renderLineHighlight: 'gutter',
+            ariaLabel: 'Solidity contract source',
           }}
         />
       </div>

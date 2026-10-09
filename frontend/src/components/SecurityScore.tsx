@@ -1,85 +1,69 @@
 import { useEffect, useState } from 'react';
+import { animate, useReducedMotion } from 'motion/react';
+import type { SeverityLevel } from '../types';
 
-interface SecurityScoreProps { score: number; }
+interface SecurityScoreProps {
+  score: number;
+  compact?: boolean;
+  /** Worst severity found. A High finding outranks a good-looking number. */
+  worst?: SeverityLevel | null;
+}
 
-export default function SecurityScore({ score }: SecurityScoreProps) {
-  const [displayed, setDisplayed] = useState(0);
+// 100 minus 20 per High, 10 per Medium, 5 per Low, 1 per Info (utils/scoreCalculator.ts).
+function band(score: number, worst?: SeverityLevel | null) {
+  if (worst === 'HIGH') return { stroke: 'rgb(var(--crit))', text: 'text-crit', label: 'Fix before deploying' };
+  if (worst === 'MEDIUM') return { stroke: 'rgb(var(--warn))', text: 'text-warn', label: 'Needs review' };
+  if (score < 50) return { stroke: 'rgb(var(--crit))', text: 'text-crit', label: 'Critical' };
+  if (score < 80) return { stroke: 'rgb(var(--warn))', text: 'text-warn', label: 'Needs review' };
+  return { stroke: 'rgb(var(--accent))', text: 'text-accent', label: 'No major issues' };
+}
+
+export default function SecurityScore({ score, compact = false, worst = null }: SecurityScoreProps) {
   const clamped = Math.max(0, Math.min(100, score));
+  const reduce = useReducedMotion();
+  const [shown, setShown] = useState(reduce ? clamped : 0);
 
-  // Count-up animation
   useEffect(() => {
-    setDisplayed(0);
-    const steps = 40;
-    const increment = clamped / steps;
-    let current = 0;
-    const timer = setInterval(() => {
-      current += increment;
-      if (current >= clamped) { setDisplayed(clamped); clearInterval(timer); }
-      else setDisplayed(Math.round(current));
-    }, 18);
-    return () => clearInterval(timer);
-  }, [clamped]);
+    if (reduce) { setShown(clamped); return; }
+    const controls = animate(0, clamped, {
+      duration: 0.9,
+      ease: [0.16, 1, 0.3, 1],
+      onUpdate: (v) => setShown(Math.round(v)),
+    });
+    return () => controls.stop();
+  }, [clamped, reduce]);
 
-  const radius = 38;
-  const circumference = 2 * Math.PI * radius;
-  const progress = circumference - (displayed / 100) * circumference;
-
-  let color = '#22c55e';
-  let trackColor = '#14532d';
-  let label = 'Secure';
-  let labelColor = 'text-emerald-400';
-
-  if (clamped < 50) {
-    color = '#ef4444'; trackColor = '#450a0a'; label = 'Critical'; labelColor = 'text-red-400';
-  } else if (clamped < 80) {
-    color = '#eab308'; trackColor = '#422006'; label = 'Needs Review'; labelColor = 'text-yellow-400';
-  }
+  const size = compact ? 80 : 104;
+  const r = compact ? 32 : 42;
+  const c = 2 * Math.PI * r;
+  const b = band(clamped, worst);
 
   return (
-    <div className="flex flex-col items-center gap-1.5 shrink-0 animate-count-up">
-      <div
-        className="relative rounded-full p-2"
-        style={{ background: `radial-gradient(circle, ${trackColor}80, transparent)` }}
-      >
-        <svg width="96" height="96" viewBox="0 0 96 96">
-          {/* Track */}
-          <circle cx="48" cy="48" r={radius} fill="none" stroke="#1f2937" strokeWidth="7" />
-          {/* Glow layer */}
-          <circle cx="48" cy="48" r={radius} fill="none"
-            stroke={color} strokeWidth="7" strokeOpacity="0.15"
-            strokeDasharray={circumference} strokeDashoffset="0"
-          />
-          {/* Progress */}
-          <circle cx="48" cy="48" r={radius} fill="none"
-            stroke={color} strokeWidth="7"
-            strokeDasharray={circumference}
-            strokeDashoffset={progress}
-            strokeLinecap="round"
-            transform="rotate(-90 48 48)"
-            style={{ transition: 'stroke-dashoffset 0.05s linear' }}
-            filter="url(#glow)"
-          />
-          <defs>
-            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="2" result="blur" />
-              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-            </filter>
-          </defs>
-          {/* Score number */}
-          <text x="48" y="44" textAnchor="middle" dominantBaseline="middle"
-            fill="white" fontSize="22" fontWeight="800" fontFamily="system-ui">
-            {displayed}
-          </text>
-          <text x="48" y="62" textAnchor="middle" dominantBaseline="middle"
-            fill="#6b7280" fontSize="9" fontFamily="system-ui">
-            / 100
-          </text>
-        </svg>
-      </div>
-      <div className="text-center">
-        <p className={`text-xs font-bold ${labelColor}`}>{label}</p>
-        <p className="text-xs text-gray-600">Security Score</p>
-      </div>
+    <div className="flex shrink-0 flex-col items-center gap-1" role="img" aria-label={`Security score ${clamped} out of 100: ${b.label}`}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden>
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgb(var(--line))" strokeWidth="7" />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke={b.stroke}
+          strokeWidth="7"
+          strokeLinecap="round"
+          strokeDasharray={c}
+          strokeDashoffset={c - (shown / 100) * c}
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        />
+        <text x="50%" y="47%" textAnchor="middle" dominantBaseline="middle" fill="rgb(var(--ink))"
+          fontSize={compact ? 22 : 28} fontWeight="700" fontFamily="'IBM Plex Mono', monospace">
+          {shown}
+        </text>
+        <text x="50%" y="68%" textAnchor="middle" dominantBaseline="middle" fill="rgb(var(--muted))"
+          fontSize="12" fontFamily="'IBM Plex Mono', monospace">
+          /100
+        </text>
+      </svg>
+      {!compact && <p className={`text-sm font-semibold ${b.text}`}>{b.label}</p>}
     </div>
   );
 }

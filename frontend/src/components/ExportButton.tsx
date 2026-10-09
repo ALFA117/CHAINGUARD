@@ -1,24 +1,23 @@
+import { motion } from 'motion/react';
+import { FileDown } from 'lucide-react';
 import { AnalysisResult } from '../types';
-import { exportToPDF } from '../utils/pdfExport';
+import { springSnappy } from '../lib/motion';
 
 interface ExportButtonProps { result: AnalysisResult; }
 
 export default function ExportButton({ result }: ExportButtonProps) {
   return (
-    <button
-      onClick={() => exportToPDF(result)}
-      className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold
-        bg-gray-700/60 hover:bg-gray-600/80 active:bg-gray-700
-        text-gray-200 border border-gray-600/40 hover:border-gray-500/60
-        transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]
-        shadow-sm hover:shadow-md shrink-0"
+    <motion.button
+      type="button"
+      // jsPDF is heavy; it is only downloaded when someone actually exports
+      onClick={() => import('../utils/pdfExport').then((m) => m.exportToPDF(result))}
+      className="btn-secondary shrink-0"
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.97 }}
+      transition={springSnappy}
     >
-      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-        <polyline points="7 10 12 15 17 10" />
-        <line x1="12" y1="15" x2="12" y2="3" />
-      </svg>
+      <FileDown className="h-4 w-4" aria-hidden />
       Export PDF
-    </button>
+    </motion.button>
   );
 }

@@ -63,8 +63,10 @@ export function exportToPDF(result: AnalysisResult): void {
   y += 12;
 
   // ── Score ───────────────────────────────────────────────
+  // A High finding paints the score red whatever the number says, matching the app
+  const hasHigh = result.vulnerabilities.some((v) => v.severity === 'HIGH');
   const scoreColor: [number, number, number] =
-    result.score >= 80 ? [34, 197, 94] : result.score >= 50 ? [234, 179, 8] : [239, 68, 68];
+    hasHigh || result.score < 50 ? [239, 68, 68] : result.score < 80 ? [234, 179, 8] : [34, 197, 94];
 
   doc.setFillColor(...scoreColor);
   doc.roundedRect(margin, y, 40, 18, 3, 3, 'F');
