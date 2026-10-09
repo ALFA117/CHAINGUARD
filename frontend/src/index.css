@@ -2,162 +2,270 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Base ──────────────────────────────────────────────────────────────────── */
-body {
-  @apply bg-gray-950 text-gray-100 antialiased;
-  background-image:
-    radial-gradient(ellipse at 20% 0%, rgba(99,102,241,0.08) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 100%, rgba(6,182,212,0.06) 0%, transparent 50%),
-    radial-gradient(circle, rgba(255,255,255,0.025) 1px, transparent 1px);
-  background-size: 100% 100%, 100% 100%, 28px 28px;
-  min-height: 100vh;
+/* ─────────────────────────────────────────────────────────────
+   ChainGuard tokens
+   Dark  = "vault": cool ink, scanner-green accent
+   Light = "audit report": warm paper, forest-green accent
+   RGB channels so Tailwind can apply opacity: rgb(var(--x) / .5)
+   ───────────────────────────────────────────────────────────── */
+:root,
+:root[data-theme='dark'] {
+  --bg: 9 12 16;
+  --surface: 16 21 28;
+  --surface-2: 24 31 41;
+  --line: 44 54 68;
+  --ink: 236 241 245;
+  --muted: 156 170 186;
+  --accent: 61 220 151;
+  --on-accent: 4 19 12;
+  --crit: 255 112 112;
+  --warn: 255 163 77;
+  --low: 242 204 87;
+  --info: 120 178 255;
+  --shadow: 0 0 0;
+  --amb-strength: 1;
+  color-scheme: dark;
 }
 
-/* ── Keyframes ─────────────────────────────────────────────────────────────── */
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
+:root[data-theme='light'] {
+  --bg: 241 239 233;
+  --surface: 252 251 248;
+  --surface-2: 230 227 219;
+  --line: 204 199 187;
+  --ink: 17 22 28;
+  --muted: 70 78 90;
+  --accent: 8 112 68;
+  --on-accent: 255 255 255;
+  --crit: 178 28 28;
+  --warn: 160 72 0;
+  --low: 115 86 0;
+  --info: 22 86 170;
+  --shadow: 40 34 20;
+  --amb-strength: 0.5;
+  color-scheme: light;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+  html,
+  body {
+    overflow-x: clip;
+  }
+  body {
+    @apply bg-bg font-sans text-ink antialiased;
+    isolation: isolate;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  ::selection {
+    background: rgb(var(--accent) / 0.3);
+  }
+  :focus-visible {
+    outline: 2px solid rgb(var(--accent));
+    outline-offset: 3px;
+    border-radius: 8px;
+  }
+  button,
+  a {
+    touch-action: manipulation;
+  }
 }
 
-@keyframes slideDown {
-  from { opacity: 0; transform: translateY(-8px); max-height: 0; }
-  to   { opacity: 1; transform: translateY(0);   max-height: 600px; }
+@layer components {
+  .t-display {
+    @apply font-display font-bold;
+    letter-spacing: -0.015em;
+    font-size: clamp(2.6rem, 7.4vw, 4.75rem);
+    line-height: 1.02;
+  }
+  .t-title {
+    @apply font-display font-bold tracking-tight;
+    font-size: clamp(1.75rem, 4.5vw, 2.75rem);
+    line-height: 1.08;
+  }
+  .t-heading {
+    @apply font-display text-lg font-bold leading-snug;
+  }
+  .t-body {
+    @apply text-base leading-relaxed text-muted;
+  }
+  .t-label {
+    @apply text-sm font-semibold text-ink;
+  }
+  .t-eyebrow {
+    @apply font-mono text-xs font-medium uppercase text-accent;
+    letter-spacing: 0.18em;
+  }
+
+  .btn {
+    @apply inline-flex min-h-[44px] cursor-pointer select-none items-center justify-center gap-2 rounded-xl px-5 text-[15px] font-semibold
+           transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply btn bg-accent text-on-accent shadow-soft hover:brightness-110;
+  }
+  .btn-secondary {
+    @apply btn border border-line bg-surface/70 text-ink backdrop-blur hover:border-accent/60;
+  }
+  .btn-icon {
+    @apply inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl border border-line bg-surface/70 text-ink backdrop-blur transition-colors hover:border-accent/60;
+  }
+
+  .card {
+    @apply rounded-2xl border border-line/80 bg-surface/85 shadow-soft backdrop-blur-sm;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 font-mono text-xs font-medium;
+  }
+  .skeleton {
+    @apply rounded-md bg-surface2;
+    background-image: linear-gradient(90deg, transparent, rgb(var(--line) / 0.6), transparent);
+    background-size: 220% 100%;
+    animation: cg-shimmer 1.4s ease-in-out infinite;
+  }
+  .skip-link {
+    @apply fixed left-4 top-4 z-[100] -translate-y-24 rounded-xl bg-accent px-5 py-3 font-semibold text-on-accent transition-transform;
+  }
+  .skip-link:focus {
+    @apply translate-y-0;
+  }
 }
 
-@keyframes shimmer {
-  0%   { background-position: -400px 0; }
-  100% { background-position: 400px 0; }
+@keyframes cg-shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
 }
 
-@keyframes scanLine {
-  0%   { transform: translateY(-100%); opacity: 0.8; }
-  100% { transform: translateY(400%);  opacity: 0; }
-}
-
-@keyframes glowPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
-  50%       { box-shadow: 0 0 16px 2px rgba(239,68,68,0.25); }
-}
-
-@keyframes glowPulseIndigo {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(99,102,241,0); }
-  50%       { box-shadow: 0 0 20px 4px rgba(99,102,241,0.3); }
-}
-
-@keyframes countUp {
-  from { opacity: 0; transform: scale(0.5); }
-  to   { opacity: 1; transform: scale(1); }
-}
-
-@keyframes borderGlow {
-  0%, 100% { border-color: rgba(99,102,241,0.4); }
-  50%       { border-color: rgba(99,102,241,0.9); }
-}
-
-@keyframes rotateSlow {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50%       { transform: translateY(-9px); }
-}
-
-@keyframes orbitSpin {
-  from { transform: rotate(0deg) scale(1.45); }
-  to   { transform: rotate(360deg) scale(1.45); }
-}
-
-@keyframes popIn {
-  0%   { opacity: 0; transform: scale(0.7); }
-  70%  { transform: scale(1.08); }
-  100% { opacity: 1; transform: scale(1); }
-}
-
-/* ── Utility classes ───────────────────────────────────────────────────────── */
-.animate-fade-in-up {
-  animation: fadeInUp 0.45s ease both;
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.3s ease both;
-}
-
-.animate-slide-down {
-  animation: slideDown 0.3s ease both;
+/* ── Ambient background (components/AmbientBackground.tsx) ── */
+.amb-root {
+  position: fixed;
+  inset: 0;
+  z-index: -10;
   overflow: hidden;
+  pointer-events: none;
+  background: rgb(var(--bg));
+  transition: opacity 600ms ease;
 }
-
-.animate-glow-high {
-  animation: glowPulse 2.5s ease-in-out infinite;
-}
-
-.animate-glow-indigo {
-  animation: glowPulseIndigo 3s ease-in-out infinite;
-}
-
-.animate-count-up {
-  animation: countUp 0.6s cubic-bezier(0.34,1.56,0.64,1) both;
-}
-
-.animate-float {
-  animation: float 3.5s ease-in-out infinite;
-}
-
-.animate-pop-in {
-  animation: popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
-}
-
-/* Staggered delay helpers */
-.delay-75  { animation-delay: 75ms; }
-.delay-150 { animation-delay: 150ms; }
-.delay-225 { animation-delay: 225ms; }
-.delay-300 { animation-delay: 300ms; }
-.delay-375 { animation-delay: 375ms; }
-.delay-450 { animation-delay: 450ms; }
-
-/* ── Skeleton loading ──────────────────────────────────────────────────────── */
-.skeleton {
-  background: linear-gradient(90deg, #1f2937 25%, #374151 50%, #1f2937 75%);
-  background-size: 400px 100%;
-  animation: shimmer 1.4s ease-in-out infinite;
-  border-radius: 6px;
-}
-
-/* ── Scan animation overlay ────────────────────────────────────────────────── */
-.scan-container {
-  position: relative;
-  overflow: hidden;
-}
-
-.scan-line {
+.amb-layer {
   position: absolute;
-  left: 0; right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(99,102,241,0.8), transparent);
-  animation: scanLine 1.8s ease-in-out infinite;
+  inset: 0;
+  will-change: transform;
+}
+.amb-calm .amb-near {
+  opacity: 0.4;
+}
+.amb-far {
+  inset: -10%;
+  background:
+    radial-gradient(42% 46% at 78% 22%, rgb(var(--accent) / calc(0.12 * var(--amb-strength))), transparent 70%),
+    radial-gradient(38% 42% at 8% 78%, rgb(var(--info) / calc(0.08 * var(--amb-strength))), transparent 70%);
+}
+.amb-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 120% 85% at 50% 35%, transparent 40%, rgb(var(--bg) / 0.9));
+}
+.amb-obj {
+  position: absolute;
+  transform-style: preserve-3d;
+}
+.amb-3d {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+.amb-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+}
+/* Shield: two faces of the same outline, the back one turned 180° */
+.amb-shield .amb-face {
+  clip-path: polygon(50% 0, 94% 16%, 94% 50%, 88% 70%, 72% 87%, 50% 100%, 28% 87%, 12% 70%, 6% 50%, 6% 16%);
+}
+.amb-shield .amb-front {
+  background: linear-gradient(150deg, rgb(var(--accent) / 0.55), rgb(var(--accent) / 0.08) 70%);
+  transform: translateZ(4px);
+}
+.amb-shield .amb-back {
+  background: linear-gradient(150deg, rgb(var(--info) / 0.4), rgb(var(--info) / 0.06) 70%);
+  transform: rotateY(180deg) translateZ(4px);
+}
+.amb-shield .amb-mark {
+  position: absolute;
+  inset: 26% 24% 30%;
+  border: 3px solid rgb(var(--bg) / 0.55);
+  border-top: 0;
+  border-right: 0;
+  transform: rotate(-45deg) translateZ(5px) scaleY(0.55);
+}
+/* Padlock: a squared body with depth, a tall shackle and a keyhole */
+.amb-lock .amb-body,
+.amb-lock .amb-body-back {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  top: 46%;
+  bottom: 0;
+  border-radius: 12%;
+}
+.amb-lock .amb-body {
+  background: linear-gradient(160deg, rgb(var(--info) / 0.6), rgb(var(--info) / 0.15));
+  transform: translateZ(7px);
+}
+.amb-lock .amb-body::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 34%;
+  width: 16%;
+  height: 34%;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: rgb(var(--bg) / 0.7);
+}
+.amb-lock .amb-body-back {
+  background: rgb(var(--info) / 0.22);
+  transform: translateZ(-7px);
+}
+.amb-lock .amb-shackle {
+  position: absolute;
+  left: 25%;
+  right: 25%;
+  top: 0;
+  height: 56%;
+  border: 9px solid rgb(var(--info) / 0.55);
+  border-bottom: 0;
+  border-radius: 999px 999px 0 0;
+}
+.amb-obj .amb-3d {
+  opacity: calc(0.25 + 0.55 * var(--amb-strength));
+}
+@media (max-width: 767px) {
+  .amb-obj .amb-3d {
+    opacity: calc(0.18 + 0.4 * var(--amb-strength));
+  }
 }
 
-/* ── Glass card effect ─────────────────────────────────────────────────────── */
-.glass {
-  background: rgba(17, 24, 39, 0.7);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255,255,255,0.06);
+/* Monaco sits inside a card; let it inherit the card's corners */
+.cg-editor .monaco-editor,
+.cg-editor .overflow-guard {
+  border-radius: 0 0 16px 16px;
 }
 
-/* ── Glow border on active ─────────────────────────────────────────────────── */
-.border-glow-indigo {
-  animation: borderGlow 2s ease-in-out infinite;
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
-
-/* ── Scrollbar ─────────────────────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: #111827; }
-::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #4b5563; }

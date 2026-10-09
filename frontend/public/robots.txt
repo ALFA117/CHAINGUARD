@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://chainguard-pi.vercel.app/sitemap.xml
