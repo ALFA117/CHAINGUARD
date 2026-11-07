@@ -3,7 +3,7 @@ export default function WhyChainGuard() {
     <section className="border-b border-gray-800/60 px-6 py-14 bg-gray-950/40">
       <div className="max-w-7xl mx-auto">
         <h2 className="text-2xl sm:text-3xl font-extrabold text-white max-w-lg">
-          Professional audits cost weeks and thousands of dollars. This takes one paste.
+          Professional audits cost weeks and thousands of dollars. A first check takes one paste.
         </h2>
 
         <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -13,7 +13,7 @@ export default function WhyChainGuard() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
             <div>
-              <p className="text-white font-bold text-lg mt-4">PDF audit report, one click</p>
+              <p className="text-white font-bold text-lg mt-4">PDF report, one click</p>
               <p className="text-gray-400 text-sm mt-1.5 leading-relaxed">
                 Export a shareable report for a client, a DAO vote, or your own records.
                 MythX charges for this. ChainGuard does not.

@@ -50,7 +50,7 @@ export default function LandingHero() {
             Find the bug before it costs millions.
           </h1>
           <p className="mt-4 text-gray-400 text-base sm:text-lg leading-relaxed max-w-lg">
-            Paste a Solidity contract, get a security audit in under a second.
+            Paste a Solidity contract, get a first-pass security check in under a second.
             Six vulnerability classes from the SWC Registry, zero install.
           </p>
 

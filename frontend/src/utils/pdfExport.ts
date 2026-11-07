@@ -36,7 +36,7 @@ export function exportToPDF(result: AnalysisResult): void {
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(156, 163, 175);
-  doc.text('Security Audit Report', margin, 26);
+  doc.text('Automated Security Scan Report', margin, 26);
   doc.text('HackOWASP 8.0', pageW - margin, 26, { align: 'right' });
 
   y = 48;
