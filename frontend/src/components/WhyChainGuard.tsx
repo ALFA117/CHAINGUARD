@@ -1,83 +1,105 @@
+import { RULES, SEVERITY_LABEL } from '../lib/severity';
+import { FileTextIcon, MonitorIcon, ScaleIcon, TimerIcon } from './Icons';
+
+const STEPS = [
+  { n: '01', title: 'Paste or pick a contract', body: 'Any single-file Solidity source, or one of the six examples.' },
+  { n: '02', title: 'Run the scan', body: 'Six regex-based rules run on the server. Results come back in well under a second.' },
+  { n: '03', title: 'Read the findings', body: 'Each finding names the SWC entry, the line, the snippet and a suggested fix.' },
+];
+
 export default function WhyChainGuard() {
   return (
-    <section className="border-b border-gray-800/60 px-6 py-14 bg-gray-950/40">
-      <div className="max-w-7xl mx-auto">
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-white max-w-lg">
-          Professional audits cost weeks and thousands of dollars. A first check takes one paste.
-        </h2>
+    <>
+      {/* How it works + why, as an uneven grid */}
+      <section id="how" className="scroll-mt-20 border-b border-line">
+        <div className="container-page py-16 sm:py-24">
+          <div className="max-w-[40ch]">
+            <p className="eyebrow">How it works</p>
+            <h2 className="mt-3 font-display text-[32px] font-semibold leading-[1.1] tracking-[-0.015em] sm:text-[40px]">
+              Professional audits take weeks. A first check takes one paste.
+            </h2>
+          </div>
 
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">
-          {/* Highlighted tile, spans 2 columns */}
-          <div className="md:col-span-2 rounded-2xl border border-indigo-700/40 bg-gradient-to-br from-indigo-950/60 to-gray-900/60 p-6 flex flex-col justify-between min-h-[180px]">
-            <svg className="w-7 h-7 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-            <div>
-              <p className="text-white font-bold text-lg mt-4">PDF report, one click</p>
-              <p className="text-gray-400 text-sm mt-1.5 leading-relaxed">
-                Export a shareable report for a client, a DAO vote, or your own records.
-                MythX charges for this. ChainGuard does not.
+          <ol className="mt-10 grid grid-cols-1 border-y border-line md:grid-cols-3">
+            {STEPS.map((s, i) => (
+              <li key={s.n} className={`py-6 md:py-8 ${i > 0 ? 'border-t border-line md:border-l md:border-t-0 md:pl-8' : ''} md:pr-8`}>
+                <span className="font-mono text-[13px] text-accent">{s.n}</span>
+                <h3 className="mt-2 text-[18px] font-semibold text-ink">{s.title}</h3>
+                <p className="mt-2 text-[15px] leading-relaxed text-ink-2">{s.body}</p>
+              </li>
+            ))}
+          </ol>
+
+          <div className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-6">
+            <article className="rounded-lg border border-ink bg-ink p-6 text-paper md:col-span-3 md:row-span-2 md:p-8">
+              <FileTextIcon size={22} className="text-[#A9BCFF]" />
+              <h3 className="mt-6 font-display text-[26px] font-semibold leading-tight">A PDF report in one click</h3>
+              <p className="mt-3 max-w-[46ch] text-[15px] leading-relaxed text-paper/80">
+                Export the score, every finding and its recommendation as a document you can attach to a
+                pull request, a DAO proposal or a client hand-off. Generated in your browser, free.
               </p>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-gray-700/50 bg-gray-900/50 p-6 flex flex-col justify-between min-h-[180px]">
-            <svg className="w-7 h-7 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            <div>
-              <p className="text-white font-bold mt-4">Under a second</p>
-              <p className="text-gray-400 text-sm mt-1.5 leading-relaxed">No queue, no CI pipeline to wait on.</p>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-gray-700/50 bg-gray-900/50 p-6 flex flex-col justify-between min-h-[180px]">
-            <svg className="w-7 h-7 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <div>
-              <p className="text-white font-bold mt-4">No install</p>
-              <p className="text-gray-400 text-sm mt-1.5 leading-relaxed">Runs in the browser. No Python, no CLI, no API key.</p>
-            </div>
+            </article>
+            <article className="rounded-lg border border-line bg-surface p-6 md:col-span-3">
+              <TimerIcon size={22} className="text-accent" />
+              <h3 className="mt-4 text-[17px] font-semibold">Under a second</h3>
+              <p className="mt-1.5 text-[15px] leading-relaxed text-ink-2">No queue and no CI pipeline to wait on.</p>
+            </article>
+            <article className="rounded-lg border border-line bg-surface p-6 md:col-span-2">
+              <MonitorIcon size={22} className="text-accent" />
+              <h3 className="mt-4 text-[17px] font-semibold">No install</h3>
+              <p className="mt-1.5 text-[15px] leading-relaxed text-ink-2">No Python, no CLI, no API key.</p>
+            </article>
+            <article className="rounded-lg border border-line bg-sunken p-6 md:col-span-1">
+              <ScaleIcon size={22} className="text-ink-2" />
+              <h3 className="mt-4 text-[17px] font-semibold">MIT</h3>
+              <p className="mt-1.5 text-[15px] leading-relaxed text-ink-2">Open source.</p>
+            </article>
           </div>
         </div>
+      </section>
 
-        <h3 className="mt-14 text-sm font-semibold text-gray-300">What it actually checks for</h3>
-        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {[
-            { id: 'SWC-107', name: 'Reentrancy', desc: 'An external call happens before the contract updates its own state.' },
-            { id: 'SWC-115', name: 'tx.origin auth', desc: 'Access control checks tx.origin instead of msg.sender.' },
-            { id: 'SWC-101', name: 'Integer overflow', desc: 'Arithmetic with no overflow protection, below Solidity 0.8.0.' },
-            { id: 'SWC-104', name: 'Unchecked call', desc: 'A .call() or .send() return value is never checked.' },
-            { id: 'SWC-106', name: 'Unprotected selfdestruct', desc: 'selfdestruct() is reachable with no access control.' },
-            { id: 'SWC-100', name: 'Missing visibility', desc: 'A function has no explicit visibility modifier.' },
-          ].map((rule) => (
-            <div key={rule.id} className="rounded-xl border border-gray-800/60 bg-gray-900/30 px-4 py-3">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-mono text-gray-600">{rule.id}</span>
-                <span className="text-sm font-semibold text-gray-200">{rule.name}</span>
-              </div>
-              <p className="text-xs text-gray-500 mt-1 leading-relaxed">{rule.desc}</p>
+      {/* Rules as a reference table */}
+      <section id="rules" className="scroll-mt-20 border-b border-line bg-surface">
+        <div className="container-page py-16 sm:py-24">
+          <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
+            <div className="max-w-[44ch]">
+              <p className="eyebrow">What it checks</p>
+              <h2 className="mt-3 font-display text-[32px] font-semibold leading-[1.1] tracking-[-0.015em] sm:text-[40px]">
+                Six rules, each mapped to the SWC Registry.
+              </h2>
             </div>
-          ))}
-        </div>
-
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="md:col-span-4 rounded-2xl border border-gray-800/60 bg-gray-900/30 px-6 py-5 flex flex-wrap items-center justify-between gap-4">
-            <p className="text-gray-400 text-sm">
-              Free and open source, MIT licensed. Every rule maps to the SWC Registry, the Web3 equivalent of the OWASP Top 10.
+            <p className="max-w-[44ch] text-[15px] leading-relaxed text-ink-2">
+              The SWC Registry is the closest thing Web3 has to the OWASP Top 10. Anything outside these
+              six patterns is not checked.
             </p>
-            <a
-              href="https://github.com/ALFA117/CHAINGUARD"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm font-semibold text-indigo-400 hover:text-indigo-300 transition-colors shrink-0"
-            >
-              Read the source →
-            </a>
+          </div>
+
+          <div className="mt-10 overflow-hidden rounded-lg border border-ink">
+            <table className="w-full border-collapse text-left">
+              <thead className="hidden bg-sunken md:table-header-group">
+                <tr className="font-mono text-[12px] text-muted">
+                  <th scope="col" className="w-[120px] px-5 py-3 font-medium">ID</th>
+                  <th scope="col" className="w-[260px] px-5 py-3 font-medium">Rule</th>
+                  <th scope="col" className="px-5 py-3 font-medium">Triggers when</th>
+                  <th scope="col" className="w-[120px] px-5 py-3 font-medium">Severity</th>
+                </tr>
+              </thead>
+              <tbody>
+                {RULES.map((r, i) => (
+                  <tr key={r.id} className={`grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 px-5 py-4 md:table-row md:p-0 ${i > 0 ? 'border-t border-line' : ''}`}>
+                    <td className="order-1 font-mono text-[13px] text-muted md:px-5 md:py-4">{r.id}</td>
+                    <th scope="row" className="order-3 col-span-2 text-[16px] font-semibold text-ink md:px-5 md:py-4">{r.name}</th>
+                    <td className="order-4 col-span-2 text-[15px] leading-relaxed text-ink-2 md:px-5 md:py-4">{r.trigger}</td>
+                    <td className="order-2 justify-self-end md:px-5 md:py-4">
+                      <span className={`sev sev-${r.severity}`}>{SEVERITY_LABEL[r.severity]}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </>
   );
 }

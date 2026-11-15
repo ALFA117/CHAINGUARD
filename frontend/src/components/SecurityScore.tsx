@@ -1,84 +1,66 @@
 import { useEffect, useState } from 'react';
+import { VERDICT_TONE, VerdictTone } from '../lib/severity';
 
-interface SecurityScoreProps { score: number; }
+interface SecurityScoreProps {
+  score: number;
+  tone: VerdictTone;
+  size?: number;
+  /** Dark variant for use on code-coloured surfaces. */
+  dark?: boolean;
+}
 
-export default function SecurityScore({ score }: SecurityScoreProps) {
-  const [displayed, setDisplayed] = useState(0);
-  const clamped = Math.max(0, Math.min(100, score));
+function prefersReducedMotion() {
+  return typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+}
 
-  // Count-up animation
+export default function SecurityScore({ score, tone, size = 80, dark = false }: SecurityScoreProps) {
+  const target = Math.max(0, Math.min(100, Math.round(score)));
+  const [shown, setShown] = useState(prefersReducedMotion() ? target : 0);
+
   useEffect(() => {
-    setDisplayed(0);
-    const steps = 40;
-    const increment = clamped / steps;
-    let current = 0;
-    const timer = setInterval(() => {
-      current += increment;
-      if (current >= clamped) { setDisplayed(clamped); clearInterval(timer); }
-      else setDisplayed(Math.round(current));
-    }, 18);
-    return () => clearInterval(timer);
-  }, [clamped]);
+    if (prefersReducedMotion()) { setShown(target); return; }
+    let raf = 0;
+    const start = performance.now();
+    const duration = 700;
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setShown(Math.round(target * eased));
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target]);
 
-  const radius = 38;
-  const circumference = 2 * Math.PI * radius;
-  const progress = circumference - (displayed / 100) * circumference;
-
-  let color = '#22c55e';
-  let trackColor = '#14532d';
-  let label = 'Secure';
-  let labelColor = 'text-emerald-400';
-
-  if (clamped < 50) {
-    color = '#ef4444'; trackColor = '#450a0a'; label = 'Critical'; labelColor = 'text-red-400';
-  } else if (clamped < 80) {
-    color = '#eab308'; trackColor = '#422006'; label = 'Needs Review'; labelColor = 'text-yellow-400';
-  }
+  const stroke = 6;
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const offset = c - (shown / 100) * c;
 
   return (
-    <div className="flex flex-col items-center gap-1.5 shrink-0 animate-count-up">
-      <div
-        className="relative rounded-full p-2"
-        style={{ background: `radial-gradient(circle, ${trackColor}80, transparent)` }}
-      >
-        <svg width="96" height="96" viewBox="0 0 96 96">
-          {/* Track */}
-          <circle cx="48" cy="48" r={radius} fill="none" stroke="#1f2937" strokeWidth="7" />
-          {/* Glow layer */}
-          <circle cx="48" cy="48" r={radius} fill="none"
-            stroke={color} strokeWidth="7" strokeOpacity="0.15"
-            strokeDasharray={circumference} strokeDashoffset="0"
-          />
-          {/* Progress */}
-          <circle cx="48" cy="48" r={radius} fill="none"
-            stroke={color} strokeWidth="7"
-            strokeDasharray={circumference}
-            strokeDashoffset={progress}
-            strokeLinecap="round"
-            transform="rotate(-90 48 48)"
-            style={{ transition: 'stroke-dashoffset 0.05s linear' }}
-            filter="url(#glow)"
-          />
-          <defs>
-            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="2" result="blur" />
-              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-            </filter>
-          </defs>
-          {/* Score number */}
-          <text x="48" y="44" textAnchor="middle" dominantBaseline="middle"
-            fill="white" fontSize="22" fontWeight="800" fontFamily="system-ui">
-            {displayed}
-          </text>
-          <text x="48" y="62" textAnchor="middle" dominantBaseline="middle"
-            fill="#6b7280" fontSize="9" fontFamily="system-ui">
-            / 100
-          </text>
-        </svg>
-      </div>
-      <div className="text-center">
-        <p className={`text-xs font-bold ${labelColor}`}>{label}</p>
-        <p className="text-xs text-gray-600">Security Score</p>
+    <div
+      className="relative shrink-0"
+      style={{ width: size, height: size }}
+      role="img"
+      aria-label={`Score ${target} out of 100`}
+    >
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true">
+        <circle
+          cx={size / 2} cy={size / 2} r={r} fill="none" strokeWidth={stroke}
+          className={dark ? 'stroke-code-line' : 'stroke-sunken'}
+        />
+        <circle
+          cx={size / 2} cy={size / 2} r={r} fill="none" strokeWidth={stroke}
+          strokeDasharray={c} strokeDashoffset={offset} strokeLinecap="butt"
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+          className={VERDICT_TONE[tone].ring}
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center leading-none">
+        <span className={`font-mono font-semibold tabular-nums ${dark ? 'text-white' : 'text-ink'}`} style={{ fontSize: size * 0.28 }}>
+          {shown}
+        </span>
+        <span className={`mt-1 font-mono text-[11px] ${dark ? 'text-code-muted' : 'text-muted'}`}>/100</span>
       </div>
     </div>
   );
