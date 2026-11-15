@@ -1,237 +1,159 @@
 import { AnalysisResult } from '../types';
+import { RULES, SEVERITY_LABEL, SEVERITY_ORDER, SEVERITY_TONE, VERDICT_TONE, countBySeverity, verdict } from '../lib/severity';
 import SecurityScore from './SecurityScore';
 import VulnerabilityCard from './VulnerabilityCard';
 import ExportButton from './ExportButton';
+import { AlertIcon, RefreshIcon, ShieldAlertIcon, ShieldCheckIcon, ShieldIcon } from './Icons';
 
 interface ResultsPanelProps {
   isLoading: boolean;
   result: AnalysisResult | null;
   error: string | null;
+  onRetry: () => void;
 }
 
-function SkeletonCard({ delay }: { delay: string }) {
+function Frame({ children, label }: { children: React.ReactNode; label: string }) {
   return (
-    <div className={`animate-fade-in-up ${delay} bg-gray-800/60 rounded-xl border border-gray-700/50 p-4`}>
-      <div className="flex items-center gap-3">
-        <div className="skeleton w-14 h-5 rounded-md shrink-0" />
-        <div className="skeleton h-4 flex-1" />
-        <div className="skeleton w-16 h-4 shrink-0" />
+    <div className="flex min-h-[300px] min-w-0 flex-col overflow-hidden rounded-lg border border-ink bg-surface lg:min-h-[482px]">
+      <div className="flex min-h-[45px] items-center justify-between gap-3 border-b border-line bg-sunken px-4 py-2">
+        <span className="font-mono text-[13px] text-ink-2">{label}</span>
+        <span className="font-mono text-[12px] text-muted">6 rules · SWC</span>
       </div>
+      {children}
     </div>
   );
 }
 
-export default function ResultsPanel({ isLoading, result, error }: ResultsPanelProps) {
-
-  /* ── Loading ─────────────────────────────────────────────────────── */
+export default function ResultsPanel({ isLoading, result, error, onRetry }: ResultsPanelProps) {
+  /* ── Loading: skeleton with the shape of the report ───────────────── */
   if (isLoading) {
     return (
-      <div className="space-y-4 animate-fade-in">
-        <div className="scan-container bg-gray-800/60 rounded-xl border border-indigo-500/30 border-glow-indigo p-5">
-          <div className="scan-line" />
+      <Frame label="Scanning…">
+        <div className="progress-track" role="progressbar" aria-label="Scanning contract">
+          <div className="progress-bar" />
+        </div>
+        <div className="space-y-6 p-5" aria-hidden="true">
           <div className="flex items-center gap-4">
-            <div className="relative w-16 h-16 shrink-0">
-              <svg className="w-16 h-16 -rotate-90" viewBox="0 0 64 64">
-                <circle cx="32" cy="32" r="26" fill="none" stroke="#1f2937" strokeWidth="6" />
-                <circle
-                  cx="32" cy="32" r="26" fill="none"
-                  stroke="#6366f1" strokeWidth="6"
-                  strokeDasharray="163"
-                  strokeDashoffset="163"
-                  strokeLinecap="round"
-                  style={{ animation: 'rotateSlow 1.2s linear infinite' }}
-                />
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <svg className="w-6 h-6 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                </svg>
-              </div>
-            </div>
-            <div className="flex-1 space-y-2">
-              <p className="text-white font-semibold">Scanning contract…</p>
-              <p className="text-gray-400 text-sm">Running 6 security rules via regex engine</p>
-              <div className="flex gap-1 flex-wrap mt-2">
-                {['Reentrancy','tx.origin','Overflow','Call','Selfdestruct','Visibility'].map((r, i) => (
-                  <span
-                    key={r}
-                    className="text-xs px-1.5 py-0.5 rounded bg-indigo-900/50 text-indigo-400 border border-indigo-700/30"
-                    style={{ animationDelay: `${i * 150}ms`, animation: 'fadeIn 0.3s ease both' }}
-                  >
-                    {r}
-                  </span>
-                ))}
-              </div>
+            <div className="skeleton h-20 w-20 rounded-full" />
+            <div className="flex-1 space-y-2.5">
+              <div className="skeleton h-5 w-32" />
+              <div className="skeleton h-3.5 w-56 max-w-full" />
             </div>
           </div>
+          <div className="grid grid-cols-4 gap-2">
+            {[0, 1, 2, 3].map((i) => <div key={i} className="skeleton h-14" />)}
+          </div>
+          {[0, 1, 2].map((i) => <div key={i} className="skeleton h-12" />)}
         </div>
-        <SkeletonCard delay="delay-75" />
-        <SkeletonCard delay="delay-150" />
-        <SkeletonCard delay="delay-225" />
-      </div>
+        <p className="sr-only" aria-live="polite">Running 6 rules against the contract.</p>
+      </Frame>
     );
   }
 
-  /* ── Error ───────────────────────────────────────────────────────── */
+  /* ── Error: cause, what to do, retry ──────────────────────────────── */
   if (error) {
     return (
-      <div className="animate-fade-in-up bg-red-950/50 border border-red-700/60 rounded-xl p-5 backdrop-blur-sm">
-        <div className="flex items-start gap-3">
-          <div className="shrink-0 w-8 h-8 rounded-full bg-red-900/60 border border-red-700 flex items-center justify-center mt-0.5">
-            <svg className="w-4 h-4 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
-            </svg>
-          </div>
+      <Frame label="Scan failed">
+        <div className="enter flex flex-1 flex-col items-start gap-4 p-6" role="alert">
+          <span className="flex h-10 w-10 items-center justify-center rounded bg-high-soft text-high">
+            <AlertIcon size={20} />
+          </span>
           <div>
-            <p className="text-red-300 font-semibold mb-1">Analysis Error</p>
-            <p className="text-red-400/80 text-sm leading-relaxed">{error}</p>
+            <h3 className="text-[17px] font-semibold text-ink">The analyzer did not return a result</h3>
+            <p className="mt-1.5 max-w-[48ch] text-[15px] leading-relaxed text-ink-2">{error}</p>
+            <p className="mt-2 max-w-[48ch] text-[14px] leading-relaxed text-muted">
+              Check your connection and try again. Your code in the editor is kept as it is.
+            </p>
           </div>
+          <button type="button" onClick={onRetry} className="btn-secondary">
+            <RefreshIcon size={16} /> Try again
+          </button>
         </div>
-      </div>
+      </Frame>
     );
   }
 
-  /* ── Empty / ready ───────────────────────────────────────────────── */
+  /* ── Empty: what will happen ──────────────────────────────────────── */
   if (!result) {
     return (
-      <div className="flex flex-col items-center justify-center h-72 gap-5 text-center animate-fade-in px-4">
-        {/* Floating shield */}
-        <div className="relative">
-          <div className="animate-float w-20 h-20 rounded-full bg-gray-800/70 border border-gray-700/60 flex items-center justify-center shadow-lg shadow-black/20">
-            <svg className="w-10 h-10 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-            </svg>
-          </div>
-          <div className="absolute inset-0 rounded-full border border-indigo-500/15 animate-pulse" style={{ transform: 'scale(1.5)' }} />
-          <div className="absolute inset-0 rounded-full border border-cyan-500/08" style={{ transform: 'scale(1.85)' }} />
-        </div>
-
-        {/* Text */}
-        <div>
-          <p className="text-gray-300 font-semibold text-base">Ready to scan</p>
-          <p className="text-gray-600 text-sm mt-1.5 max-w-xs leading-relaxed">
-            Select a contract from the dropdown or paste your own Solidity code, then click{' '}
-            <span className="text-indigo-400 font-medium">Analyze Contract</span>
+      <Frame label="Report">
+        <div className="flex flex-1 flex-col p-6">
+          <span className="flex h-10 w-10 items-center justify-center rounded bg-sunken text-ink-2">
+            <ShieldIcon size={20} />
+          </span>
+          <h3 className="mt-4 text-[17px] font-semibold text-ink">No scan yet</h3>
+          <p className="mt-1.5 max-w-[46ch] text-[15px] leading-relaxed text-ink-2">
+            Pick an example or paste your own contract, then press <strong className="font-semibold text-ink">Run scan</strong>
+            <span className="hidden md:inline"> (or <kbd className="rounded border border-line bg-paper px-1.5 py-0.5 font-mono text-[12px]">Ctrl</kbd> + <kbd className="rounded border border-line bg-paper px-1.5 py-0.5 font-mono text-[12px]">Enter</kbd> in the editor)</span>.
           </p>
+          <ul className="mt-6 divide-y divide-line border-y border-line">
+            {RULES.map((r) => (
+              <li key={r.id} className="flex items-center justify-between gap-3 py-2.5">
+                <span className="min-w-0 truncate text-[14px] text-ink-2">{r.name}</span>
+                <span className="shrink-0 font-mono text-[12px] text-muted">{r.id}</span>
+              </li>
+            ))}
+          </ul>
         </div>
-
-        {/* How it works — 3 steps */}
-        <div className="flex items-center gap-2 text-xs text-gray-600">
-          <div className="flex items-center gap-1.5 animate-fade-in-up delay-75">
-            <span className="w-5 h-5 rounded-full bg-gray-800/80 border border-gray-700 text-gray-500 text-[10px] font-bold flex items-center justify-center shrink-0">1</span>
-            <span>Paste contract</span>
-          </div>
-          <span className="text-gray-700">›</span>
-          <div className="flex items-center gap-1.5 animate-fade-in-up delay-150">
-            <span className="w-5 h-5 rounded-full bg-gray-800/80 border border-gray-700 text-gray-500 text-[10px] font-bold flex items-center justify-center shrink-0">2</span>
-            <span>Click Analyze</span>
-          </div>
-          <span className="text-gray-700">›</span>
-          <div className="flex items-center gap-1.5 animate-fade-in-up delay-225">
-            <span className="w-5 h-5 rounded-full bg-gray-800/80 border border-gray-700 text-gray-500 text-[10px] font-bold flex items-center justify-center shrink-0">3</span>
-            <span>Get instant report</span>
-          </div>
-        </div>
-
-        {/* SWC coverage badges */}
-        <div className="flex gap-1.5 flex-wrap justify-center">
-          {['SWC-107','SWC-115','SWC-101','SWC-104','SWC-106','SWC-100'].map((swc) => (
-            <span key={swc} className="text-xs px-2 py-0.5 rounded-full border border-gray-700/60 text-gray-600 font-mono bg-gray-900/30">
-              {swc}
-            </span>
-          ))}
-        </div>
-      </div>
+      </Frame>
     );
   }
 
-  /* ── Results ─────────────────────────────────────────────────────── */
-  const highs   = result.vulnerabilities.filter(v => v.severity === 'HIGH').length;
-  const mediums = result.vulnerabilities.filter(v => v.severity === 'MEDIUM').length;
-  const lows    = result.vulnerabilities.filter(v => v.severity === 'LOW').length;
-  const infos   = result.vulnerabilities.filter(v => v.severity === 'INFO').length;
-  const total   = result.totalFound;
+  /* ── Result ───────────────────────────────────────────────────────── */
+  const counts = countBySeverity(result);
+  const v = verdict(result);
+  const tone = VERDICT_TONE[v.tone];
+  const VerdictIcon = v.tone === 'pass' ? ShieldCheckIcon : ShieldAlertIcon;
+  const sorted = [...result.vulnerabilities].sort(
+    (a, b) => SEVERITY_ORDER.indexOf(a.severity) - SEVERITY_ORDER.indexOf(b.severity),
+  );
 
   return (
-    <div className="space-y-3 animate-fade-in">
-      {/* Summary card */}
-      <div className="glass rounded-xl p-4 flex flex-col sm:flex-row items-center gap-4 animate-fade-in-up">
-        <SecurityScore score={result.score} />
-
-        <div className="flex-1 space-y-1.5 min-w-0 w-full">
-          {/* Contract name + time */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-white font-bold text-base truncate">{result.contractName}</p>
-            <span className="text-xs text-gray-500 shrink-0 font-mono">
-              {new Date(result.analyzedAt).toLocaleTimeString()}
-            </span>
+    <Frame label={`Report · ${result.contractName}`}>
+      <div className="enter border-b border-line p-5">
+        <div className="flex items-center gap-5">
+          <SecurityScore score={result.score} tone={v.tone} size={84} />
+          <div className="min-w-0 flex-1">
+            <p className={`inline-flex items-center gap-1.5 text-[18px] font-semibold ${tone.text}`}>
+              <VerdictIcon size={18} /> {v.label}
+            </p>
+            <p className="mt-1 text-[14px] leading-relaxed text-ink-2">{v.detail}</p>
+            <p className="mt-1 font-mono text-[12px] text-muted">
+              {new Date(result.analyzedAt).toLocaleString()}
+            </p>
           </div>
-
-          {/* Issues summary */}
-          <p className="text-gray-400 text-sm">
-            {total === 0
-              ? 'No issues found — contract looks clean'
-              : `${total} issue${total !== 1 ? 's' : ''} detected`}
-          </p>
-
-          {/* Severity pill badges */}
-          {total > 0 && (
-            <div className="flex flex-wrap gap-1.5 pt-0.5">
-              {highs > 0 && (
-                <span className="text-xs px-2 py-0.5 rounded-full bg-red-900/60 text-red-300 border border-red-700/50 font-semibold">
-                  {highs} HIGH
-                </span>
-              )}
-              {mediums > 0 && (
-                <span className="text-xs px-2 py-0.5 rounded-full bg-orange-900/60 text-orange-300 border border-orange-700/50 font-semibold">
-                  {mediums} MEDIUM
-                </span>
-              )}
-              {lows > 0 && (
-                <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-900/60 text-yellow-300 border border-yellow-700/50 font-semibold">
-                  {lows} LOW
-                </span>
-              )}
-              {infos > 0 && (
-                <span className="text-xs px-2 py-0.5 rounded-full bg-blue-900/60 text-blue-300 border border-blue-700/50 font-semibold">
-                  {infos} INFO
-                </span>
-              )}
-            </div>
-          )}
-
-          {/* Severity distribution bar */}
-          {total > 0 && (
-            <div className="w-full h-1.5 rounded-full overflow-hidden bg-gray-800/80 flex mt-1">
-              {highs   > 0 && <div className="bg-red-500    h-full transition-all duration-700" style={{ width: `${(highs/total)*100}%`   }} />}
-              {mediums > 0 && <div className="bg-orange-500 h-full transition-all duration-700" style={{ width: `${(mediums/total)*100}%` }} />}
-              {lows    > 0 && <div className="bg-yellow-500 h-full transition-all duration-700" style={{ width: `${(lows/total)*100}%`    }} />}
-              {infos   > 0 && <div className="bg-blue-500   h-full transition-all duration-700" style={{ width: `${(infos/total)*100}%`   }} />}
-            </div>
-          )}
         </div>
 
-        <ExportButton result={result} />
+        <dl className="mt-5 grid grid-cols-4 overflow-hidden rounded border border-line">
+          {SEVERITY_ORDER.map((s, i) => (
+            <div key={s} className={`px-3 py-2.5 ${i > 0 ? 'border-l border-line' : ''} ${counts[s] > 0 ? SEVERITY_TONE[s].soft : ''}`}>
+              <dt className={`font-mono text-[12px] ${counts[s] > 0 ? SEVERITY_TONE[s].text : 'text-muted'}`}>{SEVERITY_LABEL[s]}</dt>
+              <dd className={`font-mono text-[20px] font-medium tabular-nums ${counts[s] > 0 ? 'text-ink' : 'text-muted'}`}>{counts[s]}</dd>
+            </div>
+          ))}
+        </dl>
+
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-[13px] text-muted">Score: 100 minus 20 per High, 10 per Medium, 5 per Low.</p>
+          <ExportButton result={result} />
+        </div>
       </div>
 
-      {/* Vulnerability list or clean badge */}
-      {result.vulnerabilities.length === 0 ? (
-        <div className="animate-fade-in-up delay-75 bg-emerald-950/40 border border-emerald-700/40 rounded-xl p-6 text-center">
-          <div className="animate-pop-in w-12 h-12 rounded-full bg-emerald-900/40 border border-emerald-700/40 flex items-center justify-center mx-auto mb-3">
-            <svg className="w-6 h-6 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-          <p className="text-emerald-300 font-semibold text-base">No vulnerabilities detected</p>
-          <p className="text-emerald-600 text-sm mt-1">This contract passed all 6 security checks.</p>
+      {sorted.length === 0 ? (
+        <div className="enter enter-1 flex flex-1 items-start gap-3 bg-pass-soft/60 p-5">
+          <ShieldCheckIcon size={20} className="mt-0.5 shrink-0 text-pass" />
+          <p className="text-[15px] leading-relaxed text-ink">
+            None of the six patterns matched. Keep in mind this scanner only knows these six; logic bugs,
+            oracle issues and economic attacks are out of scope.
+          </p>
         </div>
       ) : (
-        <div className="space-y-2">
-          {result.vulnerabilities.map((v, i) => (
-            <VulnerabilityCard key={v.id} vuln={v} index={i} />
+        <ul className="enter enter-1" aria-label="Findings">
+          {sorted.map((vuln, i) => (
+            <VulnerabilityCard key={vuln.id} vuln={vuln} defaultOpen={i === 0} />
           ))}
-        </div>
+        </ul>
       )}
-    </div>
+    </Frame>
   );
 }
