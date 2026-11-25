@@ -4,18 +4,27 @@ on:
   push:
     branches: [master]
     paths: ['supabase/functions/**']
+  workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
     steps:
-      - uses: actions/checkout@v3
+      # Without the secret (the frontend no longer calls the function) there is nothing to deploy: leave a notice and finish green.
+      - name: Check for the Supabase token
+        if: env.SUPABASE_ACCESS_TOKEN == ''
+        run: echo "::notice::SUPABASE_ACCESS_TOKEN is not set, so the analyze function was not deployed."
+
+      - uses: actions/checkout@v4
+        if: env.SUPABASE_ACCESS_TOKEN != ''
 
       - uses: supabase/setup-cli@v1
+        if: env.SUPABASE_ACCESS_TOKEN != ''
         with:
           version: latest
 
       - name: Deploy analyze function
+        if: env.SUPABASE_ACCESS_TOKEN != ''
         run: supabase functions deploy analyze --project-ref igtgbxghiqfqvlcqnula
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
